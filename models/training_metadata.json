@@ -1,0 +1,32 @@
+{
+  "trained_at": "2026-09-28T09:24:09.868965+00:00",
+  "classes": [
+    "NORMAL",
+    "STONE",
+    "CYST",
+    "TUMOR"
+  ],
+  "feature_dimension": 96,
+  "training_samples": 120,
+  "training_counts": {
+    "NORMAL": 30,
+    "STONE": 30,
+    "CYST": 30,
+    "TUMOR": 30
+  },
+  "training_time_seconds": 0.03,
+  "svm_params": {
+    "kernel": "rbf",
+    "C": 2.0,
+    "probability": true
+  },
+  "svm_train_accuracy": 100.0,
+  "dt_params": {
+    "max_depth": 10,
+    "min_samples_split": 5,
+    "min_samples_leaf": 3
+  },
+  "dt_train_accuracy": 100.0,
+  "validation_metrics": {},
+  "status": "READY"
+}

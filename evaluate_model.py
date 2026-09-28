@@ -27,7 +27,8 @@ VALID_EXTENSIONS = {'.png', '.jpg', '.jpeg'}
 
 def print_confusion_matrix(cm, labels):
     """Prints a clean ASCII confusion matrix."""
-    header = f"{'True \\ Pred':<12}" + "".join([f"{lbl:>10}" for lbl in labels])
+    title_col = "True \\ Pred"
+    header = f"{title_col:<12}" + "".join([f"{lbl:>10}" for lbl in labels])
     print(header)
     print("-" * len(header))
     for i, row in enumerate(cm):

@@ -7,7 +7,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 # Detect Vercel / Serverless environment
-IS_VERCEL = bool(os.environ.get('VERCEL')) or bool(os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
+IS_VERCEL = (
+    bool(os.environ.get('VERCEL')) or 
+    bool(os.environ.get('VERCEL_ENV')) or
+    bool(os.environ.get('AWS_LAMBDA_FUNCTION_NAME')) or
+    bool(os.environ.get('LAMBDA_TASK_ROOT'))
+)
 
 def _get_writable_dir(preferred_path: Path, fallback_subpath: str) -> Path:
     """Returns preferred path if writable, otherwise falls back to /tmp."""
