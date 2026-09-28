@@ -194,3 +194,31 @@ http://127.0.0.1:5000
 - **Filename Sanitization**: Uploaded files are stored with random UUID prefixes (`uuid4().hex`) and filtered through `secure_filename`.
 - **Database Relations**: User foreign keys link diagnosis records securely; users cannot inspect or mutate records belonging to other clinicians.
 - **Deterministic Consensus**: Disagreements between SVM and Decision Tree are resolved through weighted calibrated probability distributions rather than arbitrary heuristics.
+
+---
+
+## 9. Vercel Production Deployment & Fix for 500 FUNCTION_INVOCATION_FAILED
+
+### Root Causes of the Vercel Error
+1. **Read-Only Serverless Filesystem**: AWS Lambda/Vercel functions run in a read-only root directory (`/var/task/`). Unconditional top-level `os.makedirs()` calls on `instance/` or `uploads/` immediately threw `OSError: [Errno 30] Read-only file system` during lambda cold-start.
+2. **Missing WSGI Serverless Entrypoint**: Vercel expects a serverless handler file such as `api/index.py` configured via `vercel.json`.
+3. **Heavy / Unused Dependencies Exceeding 250MB Limit**: Packages like `opencv-python-headless` and `scikit-image` inflated the unzipped Lambda container size beyond limits.
+4. **Missing or Untracked Model Artifacts**: If `.pkl` binaries were not pre-generated before git push, model inference failed on unhandled missing files.
+
+### Architectural Fixes Applied
+- **Dynamic Writable Directory Allocation**: SQLite database and uploads dynamically default to system temp (`/tmp/nephroscan/`) when running on Vercel.
+- **Serverless Image Persistence**: Uploaded CT scans are converted to base64 Data URIs and saved to the database record, guaranteeing cross-instance rendering on `/result/<id>` without depending on ephemeral container disks.
+- **Dedicated Entrypoint & Routing**: Added `api/index.py` and `vercel.json` routing all requests to the `@vercel/python` serverless runtime.
+- **Lightweight Dependency Optimization**: Trimmed unused libraries, keeping the bundle fast and well under the 250MB AWS Lambda limit.
+- **Self-Healing ML Estimator Initialization**: If model `.pkl` files are not on disk, `app.py` automatically initializes and fits the calibrated multiclass SVM and regularized Decision Tree in-memory, ensuring inference is always operational.
+- **Standardized REST Prediction Endpoint**: Implemented `/api/predict` returning structured JSON for all clinical and error states (200, 400, 422, 503, 500).
+
+### Vercel Deployment Settings
+- **Framework Preset**: `Other`
+- **Root Directory**: `./`
+- **Build Command**: `None` (Vercel automatically installs `requirements.txt`)
+- **Output Directory**: `None`
+- **Environment Variables**:
+  - `SECRET_KEY`: Set to a strong random secret key.
+  - `DATABASE_URL`: (Optional) PostgreSQL connection URI (e.g. from Neon, Supabase, or AWS RDS). If omitted, an ephemeral SQLite database in `/tmp/nephroscan/instance/` is utilized.
+

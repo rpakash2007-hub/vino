@@ -42,6 +42,7 @@ class DiagnosisHistory(db.Model):
     filename = db.Column(db.String(256), nullable=False)
     original_filename = db.Column(db.String(256), nullable=False)
     image_dimensions = db.Column(db.String(64), default='Unknown')
+    image_data = db.Column(db.Text, nullable=True)  # Base64 data URI for serverless display persistence
     
     # Ensemble diagnosis outcome
     prediction = db.Column(db.String(32), nullable=False)  # NORMAL, STONE, CYST, TUMOR

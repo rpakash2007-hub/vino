@@ -5,35 +5,93 @@ CRITICAL ARCHITECTURE REQUIREMENT:
 The exact same extract_features function MUST be utilized during:
 1. Model training (train_model.py)
 2. Model evaluation (evaluate_model.py)
-3. Production web prediction (app.py)
+3. Production web & API prediction (app.py)
 
 This guarantees absolute reproducibility and eliminates training-serving skew.
 """
 
+import io
 import numpy as np
 from PIL import Image
-from scipy import ndimage
-from scipy.stats import skew, kurtosis
+
+try:
+    from scipy import ndimage
+    from scipy.stats import skew as scipy_skew, kurtosis as scipy_kurtosis
+    HAS_SCIPY = True
+except Exception:
+    HAS_SCIPY = False
 
 # Canonical target resolution for ML feature extraction
 TARGET_IMAGE_SIZE = (128, 128)
+
+def _calc_skew(a: np.ndarray) -> float:
+    if HAS_SCIPY:
+        return float(scipy_skew(a))
+    m = np.mean(a)
+    s = np.std(a) + 1e-9
+    return float(np.mean(((a - m) / s) ** 3))
+
+def _calc_kurtosis(a: np.ndarray) -> float:
+    if HAS_SCIPY:
+        return float(scipy_kurtosis(a))
+    m = np.mean(a)
+    s = np.std(a) + 1e-9
+    return float(np.mean(((a - m) / s) ** 4) - 3.0)
+
+def _sobel_gradients(gray: np.ndarray):
+    if HAS_SCIPY:
+        sobel_x = ndimage.sobel(gray, axis=1)
+        sobel_y = ndimage.sobel(gray, axis=0)
+        return sobel_x, sobel_y
+    
+    # Pure NumPy fallback 3x3 Sobel convolution
+    padded = np.pad(gray, 1, mode='edge')
+    sobel_x = (
+        -1 * padded[:-2, :-2] + 1 * padded[:-2, 2:] +
+        -2 * padded[1:-1, :-2] + 2 * padded[1:-1, 2:] +
+        -1 * padded[2:, :-2] + 1 * padded[2:, 2:]
+    )
+    sobel_y = (
+        -1 * padded[:-2, :-2] - 2 * padded[:-2, 1:-1] - 1 * padded[:-2, 2:] +
+        1 * padded[2:, :-2] + 2 * padded[2:, 1:-1] + 1 * padded[2:, 2:]
+    )
+    return sobel_x, sobel_y
 
 def preprocess_image(image_input) -> np.ndarray:
     """
     Safely opens, converts, resizes, and normalizes an image input.
     Accepts:
       - filepath string or Path
+      - bytes or bytearray
+      - io.BytesIO or file-like object with .read()
       - PIL.Image instance
       - numpy ndarray
     Returns:
       - 2D float32 numpy array normalized to [0, 255] with shape (128, 128)
     """
-    if isinstance(image_input, (str, bytes)) or hasattr(image_input, 'read'):
-        img = Image.open(image_input)
+    if isinstance(image_input, (bytes, bytearray)):
+        img = Image.open(io.BytesIO(image_input))
+    elif hasattr(image_input, 'read'):
+        if hasattr(image_input, 'seek'):
+            try:
+                image_input.seek(0)
+            except Exception:
+                pass
+        content = image_input.read()
+        if hasattr(image_input, 'seek'):
+            try:
+                image_input.seek(0)
+            except Exception:
+                pass
+        img = Image.open(io.BytesIO(content))
     elif isinstance(image_input, Image.Image):
         img = image_input
     elif isinstance(image_input, np.ndarray):
         img = Image.fromarray(image_input.astype(np.uint8))
+    elif isinstance(image_input, (str, object)) and hasattr(image_input, '__fspath__'):
+        img = Image.open(image_input)
+    elif isinstance(image_input, str):
+        img = Image.open(image_input)
     else:
         raise ValueError(f"Unsupported image input type: {type(image_input)}")
 
@@ -72,8 +130,8 @@ def extract_features(image_input) -> np.ndarray:
     mean_val = float(np.mean(gray))
     std_val = float(np.std(gray))
     var_val = float(np.var(gray))
-    skew_val = float(skew(gray.ravel()))
-    kurt_val = float(kurtosis(gray.ravel()))
+    skew_val = _calc_skew(gray.ravel())
+    kurt_val = _calc_kurtosis(gray.ravel())
     p10 = float(np.percentile(gray, 10))
     p25 = float(np.percentile(gray, 25))
     p50 = float(np.percentile(gray, 50))
@@ -102,7 +160,6 @@ def extract_features(image_input) -> np.ndarray:
         features.append(radial_val)
 
     # 4. Spatial Quadrant Features (4 quadrants x 3 metrics = 12 features)
-    # Detects focal lesions (e.g. unilateral mass, cyst in upper pole, calcified stone)
     half_h, half_w = h // 2, w // 2
     quadrants = [
         gray[:half_h, :half_w],   # Top-Left
@@ -116,8 +173,7 @@ def extract_features(image_input) -> np.ndarray:
         features.append(float(np.percentile(q, 90) - np.percentile(q, 10)))
 
     # 5. Sobel Edge Gradients & Structural Patterns (32 features)
-    sobel_x = ndimage.sobel(gray, axis=1)
-    sobel_y = ndimage.sobel(gray, axis=0)
+    sobel_x, sobel_y = _sobel_gradients(gray)
     magnitude = np.hypot(sobel_x, sobel_y)
     angles = (np.arctan2(sobel_y, sobel_x) + np.pi) * (180 / np.pi)  # 0 to 360 degrees
 

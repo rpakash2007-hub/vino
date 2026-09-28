@@ -125,7 +125,7 @@
         Analyzed Kidney Scan
       </h4>
       <div style="background: #000; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 1rem;">
-        <img src="{{ url_for('uploaded_file', filename=diagnosis.filename) }}" alt="Analyzed CT Scan" style="width: 100%; height: 260px; object-fit: contain; display: block;">
+        <img src="{% if diagnosis.image_data %}{{ diagnosis.image_data }}{% else %}{{ url_for('uploaded_file', filename=diagnosis.filename) }}{% endif %}" alt="Analyzed CT Scan" style="width: 100%; height: 260px; object-fit: contain; display: block;">
       </div>
       <div style="text-align: left; font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
         <div><strong>Filename:</strong> <span style="color: var(--text-main); font-family: 'JetBrains Mono', monospace;">{{ diagnosis.original_filename }}</span></div>

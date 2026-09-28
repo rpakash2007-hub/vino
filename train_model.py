@@ -222,20 +222,35 @@ def train(train_dir: Path = Config.TRAIN_DIR,
         print(f"[EVAL] Validation Decision Tree Accuracy: {val_dt_acc * 100:.2f}%")
 
     # 6. Save Model Artifacts
-    print(f"\n[INFO] Saving trained models and preprocessors to {Config.MODELS_DIR}...")
-    Config.MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    target_models_dir = Config.MODELS_DIR
+    try:
+        target_models_dir.mkdir(parents=True, exist_ok=True)
+        # Test write permission
+        test_file = target_models_dir / '.write_test'
+        test_file.touch()
+        test_file.unlink()
+    except Exception:
+        target_models_dir = Config.MODELS_CACHE_DIR
+        target_models_dir.mkdir(parents=True, exist_ok=True)
 
-    joblib.dump(svm, Config.SVM_MODEL_PATH)
-    print(f"  [✓] Saved: {Config.SVM_MODEL_PATH}")
+    print(f"\n[INFO] Saving trained models and preprocessors to {target_models_dir}...")
+    svm_path = target_models_dir / 'svm_model.pkl'
+    dt_path = target_models_dir / 'decision_tree_model.pkl'
+    scaler_path = target_models_dir / 'scaler.pkl'
+    labels_path = target_models_dir / 'class_labels.pkl'
+    meta_path = target_models_dir / 'training_metadata.json'
 
-    joblib.dump(dt, Config.DT_MODEL_PATH)
-    print(f"  [✓] Saved: {Config.DT_MODEL_PATH}")
+    joblib.dump(svm, svm_path)
+    print(f"  [✓] Saved: {svm_path}")
 
-    joblib.dump(scaler, Config.SCALER_PATH)
-    print(f"  [✓] Saved: {Config.SCALER_PATH}")
+    joblib.dump(dt, dt_path)
+    print(f"  [✓] Saved: {dt_path}")
 
-    joblib.dump(CLASSES, Config.CLASS_LABELS_PATH)
-    print(f"  [✓] Saved: {Config.CLASS_LABELS_PATH}")
+    joblib.dump(scaler, scaler_path)
+    print(f"  [✓] Saved: {scaler_path}")
+
+    joblib.dump(CLASSES, labels_path)
+    print(f"  [✓] Saved: {labels_path}")
 
     elapsed = round(time.time() - start_time, 2)
     metadata = {
@@ -253,9 +268,9 @@ def train(train_dir: Path = Config.TRAIN_DIR,
         'status': 'READY'
     }
 
-    with open(Config.METADATA_PATH, 'w') as f:
+    with open(meta_path, 'w') as f:
         json.dump(metadata, f, indent=2)
-    print(f"  [✓] Saved: {Config.METADATA_PATH}")
+    print(f"  [✓] Saved: {meta_path}")
 
     print("\n" + "=" * 70)
     print(f" MODEL TRAINING COMPLETE IN {elapsed}s")

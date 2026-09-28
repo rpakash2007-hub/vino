@@ -42,7 +42,12 @@ def evaluate(test_dir: Path = Config.TEST_DIR):
     print("=" * 70)
 
     # 1. Verify models exist
-    required_files = [Config.SVM_MODEL_PATH, Config.DT_MODEL_PATH, Config.SCALER_PATH]
+    svm_path = Config.SVM_MODEL_PATH if Config.SVM_MODEL_PATH.exists() else Config.SVM_CACHE_PATH
+    dt_path = Config.DT_MODEL_PATH if Config.DT_MODEL_PATH.exists() else Config.DT_CACHE_PATH
+    scaler_path = Config.SCALER_PATH if Config.SCALER_PATH.exists() else Config.SCALER_CACHE_PATH
+    labels_path = Config.CLASS_LABELS_PATH if Config.CLASS_LABELS_PATH.exists() else Config.CLASS_LABELS_CACHE_PATH
+
+    required_files = [svm_path, dt_path, scaler_path]
     for rf in required_files:
         if not rf.exists():
             print(f"[ERROR] Required model artifact missing: {rf}")
@@ -51,10 +56,10 @@ def evaluate(test_dir: Path = Config.TEST_DIR):
 
     # 2. Load models and preprocessor
     print("[INFO] Loading trained models and preprocessor...")
-    svm = joblib.load(Config.SVM_MODEL_PATH)
-    dt = joblib.load(Config.DT_MODEL_PATH)
-    scaler = joblib.load(Config.SCALER_PATH)
-    labels = joblib.load(Config.CLASS_LABELS_PATH) if Config.CLASS_LABELS_PATH.exists() else CLASSES
+    svm = joblib.load(svm_path)
+    dt = joblib.load(dt_path)
+    scaler = joblib.load(scaler_path)
+    labels = joblib.load(labels_path) if labels_path.exists() else CLASSES
 
     # 3. Load test dataset
     eval_dir = test_dir
