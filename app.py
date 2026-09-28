@@ -29,7 +29,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger('nephroscan')
 
-app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent
+app = Flask(
+    __name__,
+    template_folder=str(BASE_DIR / 'templates'),
+    static_folder=str(BASE_DIR / 'static')
+)
 app.config.from_object(Config)
 
 # Initialize Database and Login Manager
