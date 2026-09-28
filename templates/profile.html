@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Clinician Profile - NephroScan AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.3rem;">
+      Clinician Profile
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+      Manage your credentials and view screening performance metrics
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Account Information -->
+    <div class="glass-card">
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--cyan-primary);">
+        Account Information
+      </h3>
+
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="user-avatar" style="width: 52px; height: 52px; font-size: 1.4rem;">
+          {{ current_user.name[:1]|upper }}
+        </div>
+        <div>
+          <div style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">{{ current_user.name }}</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">{{ current_user.email }}</div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.8;">
+        <div><strong>Role:</strong> <span style="color: #6ee7b7;">{% if current_user.is_admin %}Administrator & Clinician{% else %}Registered Clinician{% endif %}</span></div>
+        <div><strong>Total Scans Screened:</strong> <span style="color: var(--cyan-primary); font-weight: 700;">{{ user_scans_count }}</span></div>
+        <div><strong>Member Since:</strong> <span>{{ current_user.created_at.strftime('%B %d, %Y') }}</span></div>
+      </div>
+    </div>
+
+    <!-- Security & Password Update -->
+    <div class="glass-card">
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem;">
+        Update Password
+      </h3>
+
+      <form method="POST" action="{{ url_for('profile') }}">
+        <div class="form-group">
+          <label class="form-label" for="current_password">Current Password</label>
+          <input type="password" id="current_password" name="current_password" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="new_password">New Password</label>
+          <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Minimum 6 characters" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="confirm_new_password">Confirm New Password</label>
+          <input type="password" id="confirm_new_password" name="confirm_new_password" class="form-control" placeholder="Re-enter new password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+          Save Security Changes
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - NephroScan AI Medical Decision Support{% endblock %}
+
+{% block content %}
+<!-- Welcome & Status Header -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem;">
+  <div>
+    <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.3rem;">
+      Welcome, {{ current_user.name }}
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+      AI Kidney Image Screening &bull; Dual-Model Diagnostic Workspace
+    </p>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 1rem;">
+    <!-- Model Status Card -->
+    <div style="background: rgba(13, 27, 51, 0.7); border: 1px solid var(--glass-border); padding: 0.6rem 1.2rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">AI Model Status:</span>
+      {% if models_ready %}
+        <span style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+          READY
+        </span>
+      {% else %}
+        <span style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b;"></span>
+          MODEL NOT TRAINED
+        </span>
+      {% endif %}
+    </div>
+
+    <a href="{{ url_for('upload') }}" class="btn btn-primary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+      Upload CT/MRI Scan
+    </a>
+  </div>
+</div>
+
+{% if not models_ready %}
+<div class="glass-card" style="border-left: 4px solid var(--warning); margin-bottom: 2rem; background: rgba(245, 158, 11, 0.05);">
+  <div style="display: flex; gap: 1rem; align-items: flex-start;">
+    <div style="font-size: 1.5rem; color: var(--warning);">&#9888;</div>
+    <div>
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Diagnostic Models Not Trained Yet</h3>
+      <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0.75rem;">
+        The machine learning weights (<code>svm_model.pkl</code>, <code>decision_tree_model.pkl</code>, <code>scaler.pkl</code>) have not been compiled on this host. The screening engine cannot classify uploaded scans until training completes.
+      </p>
+      <div style="background: rgba(7, 13, 30, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--cyan-primary);">
+        # In your terminal or PowerShell:<br>
+        python train_model.py
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Clinical Aggregate Statistics Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Scans Screened</div>
+    <div class="stat-value">{{ stats.total }}</div>
+    <span class="stat-tag" style="background: rgba(0, 229, 255, 0.15); color: var(--cyan-primary);">Lifetime History</span>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Normal Results</div>
+    <div class="stat-value" style="color: #34d399;">{{ stats.normal }}</div>
+    <span class="stat-tag tag-normal">Unremarkable Renal</span>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Stone Results</div>
+    <div class="stat-value" style="color: #fbbf24;">{{ stats.stone }}</div>
+    <span class="stat-tag tag-stone">Nephrolithiasis</span>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Cyst Results</div>
+    <div class="stat-value" style="color: #93c5fd;">{{ stats.cyst }}</div>
+    <span class="stat-tag tag-cyst">Fluid Lesions</span>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Tumor Results</div>
+    <div class="stat-value" style="color: #f87171;">{{ stats.tumor }}</div>
+    <span class="stat-tag tag-tumor">Solid Masses</span>
+  </div>
+</div>
+
+<!-- Upload Scan CTA Box -->
+<div class="glass-card" style="margin-bottom: 2.5rem; background: linear-gradient(135deg, rgba(13, 27, 51, 0.9), rgba(0, 119, 182, 0.2));">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--cyan-primary); letter-spacing: 0.5px;">Decision Support Tool</span>
+      <h2 style="font-size: 1.45rem; font-weight: 700; margin: 0.2rem 0 0.4rem;">Upload New Kidney CT / MRI Scan</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 600px;">
+        Accepts axial CT DICOM-exported slices and MRI scans (.jpg, .jpeg, .png). Standardized feature extraction evaluates radiodensity and tissue symmetry.
+      </p>
+    </div>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary btn-lg">
+      Launch Scan Screening
+    </a>
+  </div>
+</div>
+
+<!-- Recent Diagnosis History Table -->
+<div class="glass-card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h3 style="font-size: 1.25rem; font-weight: 700;">Recent Kidney Diagnoses</h3>
+      <p style="font-size: 0.82rem; color: var(--text-muted);">Audited screening events for authenticated clinician</p>
+    </div>
+    <a href="{{ url_for('history') }}" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+      View All History &rarr;
+    </a>
+  </div>
+
+  {% if recent_scans %}
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Scan Timestamp</th>
+            <th>Original Filename</th>
+            <th>Resolution</th>
+            <th>Primary Classification</th>
+            <th>Consensus Confidence</th>
+            <th>SVM Model</th>
+            <th>Decision Tree</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for scan in recent_scans %}
+            <tr>
+              <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;">
+                {{ scan.created_at.strftime('%Y-%m-%d %H:%M') }}
+              </td>
+              <td style="font-weight: 600;">{{ scan.original_filename }}</td>
+              <td style="color: var(--text-dim); font-size: 0.8rem;">{{ scan.image_dimensions }}</td>
+              <td>
+                {% if scan.prediction == 'NORMAL' %}
+                  <span class="stat-tag tag-normal">NORMAL</span>
+                {% elif scan.prediction == 'STONE' %}
+                  <span class="stat-tag tag-stone">STONE</span>
+                {% elif scan.prediction == 'CYST' %}
+                  <span class="stat-tag tag-cyst">CYST</span>
+                {% elif scan.prediction == 'TUMOR' %}
+                  <span class="stat-tag tag-tumor">TUMOR</span>
+                {% endif %}
+                {% if scan.is_low_confidence %}
+                  <span style="font-size: 0.7rem; color: var(--warning); display: block; margin-top: 2px;">⚠ Low Conf</span>
+                {% endif %}
+              </td>
+              <td style="font-weight: 700; color: var(--text-main);">
+                {{ "%.2f"|format(scan.confidence) }}%
+              </td>
+              <td style="font-size: 0.82rem;">{{ scan.svm_prediction }} ({{ "%.1f"|format(scan.svm_confidence) }}%)</td>
+              <td style="font-size: 0.82rem;">{{ scan.decision_tree_prediction }} ({{ "%.1f"|format(scan.decision_tree_confidence) }}%)</td>
+              <td>
+                <a href="{{ url_for('result', diagnosis_id=scan.id) }}" class="btn btn-outline-cyan" style="padding: 0.3rem 0.7rem; font-size: 0.8rem;">
+                  View Report
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+      <p style="font-size: 1rem; margin-bottom: 0.5rem;">No kidney scans have been screened yet.</p>
+      <p style="font-size: 0.85rem; margin-bottom: 1.5rem;">Upload your first axial CT or MRI scan to generate a dual-model diagnostic report.</p>
+      <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload Scan Now</a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Medical Disclaimer Notice -->
+<div class="medical-disclaimer">
+  <div class="disclaimer-icon">&#9888;</div>
+  <div class="disclaimer-text">
+    <strong>Decision Support Advisory:</strong> Automated classifications are generated via mathematical feature extraction and machine learning estimators. Always correlate AI predictions with formal radiology reports, clinical symptoms, and laboratory metrics.
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Model Architecture & Dataset Analytics - NephroScan AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="margin-bottom: 2rem;">
+    <div style="display: inline-block; font-size: 0.8rem; font-weight: 700; color: var(--cyan-primary); text-transform: uppercase; letter-spacing: 0.5px; background: rgba(0, 229, 255, 0.1); padding: 0.25rem 0.8rem; border-radius: 20px; border: 1px solid rgba(0, 229, 255, 0.25); margin-bottom: 0.75rem;">
+      Diagnostic Engineering Telemetry
+    </div>
+    <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.3rem;">
+      AI Model Specifications & Dataset Analytics
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+      Technical inspection of Support Vector Machine, Decision Tree estimators, and dataset distributions
+    </p>
+  </div>
+
+  <!-- Model Status Overview Banner -->
+  <div class="glass-card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">
+          Deployment Status
+        </div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-top: 0.2rem;">
+          {% if models_ready %}
+            <span style="color: #34d399;">● READY FOR INFERENCE</span>
+          {% else %}
+            <span style="color: #fbbf24;">● MODEL NOT TRAINED</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="text-align: right;">
+        <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">
+          Last Model Training
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--cyan-primary); margin-top: 0.2rem;">
+          {% if metadata and metadata.trained_at %}
+            {{ metadata.trained_at }}
+          {% else %}
+            Not Available
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Measured Performance Metrics (Real Metrics Only) -->
+  {% if metadata %}
+  <div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+      <div class="stat-label">SVM Training Accuracy</div>
+      <div class="stat-value" style="color: var(--cyan-primary);">
+        {{ metadata.svm_train_accuracy }}%
+      </div>
+      <span class="stat-tag" style="background: rgba(0, 229, 255, 0.15); color: var(--cyan-primary);">RBF Kernel</span>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Decision Tree Accuracy</div>
+      <div class="stat-value" style="color: #c084fc;">
+        {{ metadata.dt_train_accuracy }}%
+      </div>
+      <span class="stat-tag" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">Max Depth 10</span>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Feature Dimension</div>
+      <div class="stat-value">96</div>
+      <span class="stat-tag" style="background: rgba(255, 255, 255, 0.08); color: var(--text-main);">Radiomic Vector</span>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Target Classes</div>
+      <div class="stat-value" style="font-size: 1.6rem; margin-top: 0.5rem;">4</div>
+      <span class="stat-tag tag-normal">Normal, Stone, Cyst, Tumor</span>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Dataset Distribution Breakdown Table -->
+  <div class="glass-card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">
+      Dataset Volume & Split Distribution
+    </h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+      Count of verified axial CT/MRI slices currently residing in the <code>dataset/</code> directories
+    </p>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Disease Category</th>
+            <th>Training Set (dataset/train/)</th>
+            <th>Validation Set (dataset/val/)</th>
+            <th>Test Set (dataset/test/)</th>
+            <th>Total Images</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in classes %}
+            {% set tr = dataset_stats.train[c] %}
+            {% set va = dataset_stats.val[c] %}
+            {% set te = dataset_stats.test[c] %}
+            <tr>
+              <td style="font-weight: 700;">
+                {% if c == 'NORMAL' %}<span style="color: #34d399;">NORMAL</span>
+                {% elif c == 'STONE' %}<span style="color: #fbbf24;">STONE</span>
+                {% elif c == 'CYST' %}<span style="color: #93c5fd;">CYST</span>
+                {% elif c == 'TUMOR' %}<span style="color: #f87171;">TUMOR</span>
+                {% endif %}
+              </td>
+              <td>{{ tr }}</td>
+              <td>{{ va }}</td>
+              <td>{{ te }}</td>
+              <td style="font-weight: 700; color: var(--text-main);">{{ tr + va + te }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Terminal Training & Evaluation Instructions for Administrators -->
+  <div class="glass-card">
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--cyan-primary);">
+      Administrator Pipeline Commands
+    </h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+      To prevent unauthorized server load, model re-training is executed via CLI with complete parameter validation:
+    </p>
+
+    <div style="background: rgba(7, 13, 30, 0.85); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 1.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #cbd5e1; line-height: 1.8;">
+      <div style="color: var(--text-dim);"># 1. Train models on dataset/train/</div>
+      <div style="color: var(--cyan-primary);">python train_model.py</div>
+      <br>
+      <div style="color: var(--text-dim);"># 2. Evaluate performance on dataset/test/ and generate reports</div>
+      <div style="color: var(--cyan-primary);">python evaluate_model.py</div>
+      <br>
+      <div style="color: var(--text-dim);"># 3. Organize new raw Kaggle or DICOM images into 70/15/15 splits</div>
+      <div style="color: var(--cyan-primary);">python prepare_dataset.py --source "path/to/extracted"</div>
+    </div>
+  </div>
+
+  <!-- Medical Disclaimer -->
+  <div class="medical-disclaimer">
+    <div class="disclaimer-icon">&#9888;</div>
+    <div class="disclaimer-text">
+      <strong>RESEARCH & CLINICAL OVERSIGHT:</strong> Machine learning metrics reflect retrospective statistical associations on benchmark images. Clinical validation and radiological sign-off are required prior to diagnostic utilization.
+    </div>
+  </div>
+
+</div>
+{% endblock %}

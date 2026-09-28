@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}NephroScan AI - Kidney Medical Image Diagnosis{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="{{ url_for('index') }}" class="brand-logo">
+        <div class="brand-icon">
+          <!-- Kidney / Medical Cross SVG -->
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C8.5 2 6 5.5 6 9c0 4.5 4 8 6 13 2-5 6-8.5 6-13 0-3.5-2.5-7-6-7zm0 10.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 7.5 12 7.5s2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5z"/>
+          </svg>
+        </div>
+        <span>NephroScan <strong style="color: var(--cyan-primary);">AI</strong></span>
+        <span class="brand-tag">CT / MRI CAD</span>
+      </a>
+
+      <ul class="nav-links">
+        {% if current_user.is_authenticated %}
+          <li><a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a></li>
+          <li><a href="{{ url_for('upload') }}" class="nav-link">Upload Scan</a></li>
+          <li><a href="{{ url_for('history') }}" class="nav-link">Diagnosis History</a></li>
+          <li><a href="{{ url_for('admin_model_info') }}" class="nav-link">Model Specs</a></li>
+          <li><a href="{{ url_for('profile') }}" class="nav-link">Profile</a></li>
+          <li class="nav-user">
+            <div class="user-avatar">{{ current_user.name[:1]|upper }}</div>
+            <span style="font-size: 0.85rem; font-weight: 600;">{{ current_user.name.split()[0] }}</span>
+          </li>
+          <li><a href="{{ url_for('logout') }}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Logout</a></li>
+        {% else %}
+          <li><a href="{{ url_for('index') }}#about" class="nav-link">Technology</a></li>
+          <li><a href="{{ url_for('index') }}#classes" class="nav-link">Diagnostic Classes</a></li>
+          <li><a href="{{ url_for('login') }}" class="nav-link">Sign In</a></li>
+          <li><a href="{{ url_for('register') }}" class="btn btn-outline-cyan">Register</a></li>
+          <li><a href="{{ url_for('upload') }}" class="btn btn-primary">Screen Scan</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Flash Messaging Notifications -->
+  <div class="main-wrapper">
+    <div class="alert-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{{ message }}</span>
+              <button class="alert-close" aria-label="Close">&times;</button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% if custom_error %}
+        <div class="alert alert-danger">
+          <span>{{ custom_error }}</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Main Content Slot -->
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Global Footer with Regulatory Medical Disclaimer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-disclaimer-box">
+        <strong>CLINICAL DISCLAIMER & DECISION SUPPORT PROTOCOL:</strong><br>
+        This AI system is intended for educational and screening/decision-support purposes only. It does not replace professional medical diagnosis. CT/MRI findings should be reviewed and confirmed by a qualified healthcare professional. Do not rely on automated machine learning outputs for emergency or critical intervention decisions.
+      </div>
+      
+      <div class="footer-top">
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <span style="color: var(--text-main); font-weight: 700;">NephroScan AI</span>
+          <span>&bull;</span>
+          <span>Dual-Model (SVM + Decision Tree) Decision Support System</span>
+        </div>
+        <div>
+          <span>Target Classes: <strong>NORMAL | STONE | CYST | TUMOR</strong> (Strictly 4 Categories)</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

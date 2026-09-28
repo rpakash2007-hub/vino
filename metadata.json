@@ -1,0 +1,6 @@
+{
+  "name": "NephroScan AI",
+  "description": "AI-Powered Medical Image Diagnosis System for Kidney Disease (CT/MRI screening for Normal, Stone, Cyst, and Tumor)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

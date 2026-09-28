@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Kidney CT or MRI Scan - NephroScan AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <div style="display: inline-block; font-size: 0.8rem; font-weight: 700; color: var(--cyan-primary); text-transform: uppercase; letter-spacing: 0.5px; background: rgba(0, 229, 255, 0.1); padding: 0.25rem 0.8rem; border-radius: 20px; border: 1px solid rgba(0, 229, 255, 0.25); margin-bottom: 0.75rem;">
+      Diagnostic Screening Intake
+    </div>
+    <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.5rem;">
+      Upload Kidney CT or MRI Scan
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 580px; margin: 0 auto;">
+      Submit an axial cross-sectional kidney CT or MRI image (.jpg, .jpeg, .png) for feature extraction and dual-model classification.
+    </p>
+  </div>
+
+  {% if not models_ready %}
+    <div class="glass-card" style="border-left: 4px solid var(--warning); margin-bottom: 2rem; background: rgba(245, 158, 11, 0.08);">
+      <h3 style="font-size: 1.1rem; color: #fbbf24; margin-bottom: 0.3rem;">AI Model Not Initialized</h3>
+      <p style="font-size: 0.85rem; color: #cbd5e1;">
+        The machine learning weights have not been trained yet. Please run <code>python train_model.py</code> in the terminal to initialize the SVM and Decision Tree classifiers before analyzing scans.
+      </p>
+    </div>
+  {% endif %}
+
+  <!-- Upload Card -->
+  <div class="glass-card">
+    <form id="scanUploadForm" method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+      
+      <!-- Validation Error Display -->
+      <div id="validationError" class="alert alert-danger" style="display: none; margin-bottom: 1.5rem;"></div>
+
+      <!-- Drag & Drop Zone -->
+      <div id="uploadDropzone" class="upload-dropzone">
+        <input type="file" id="scanFileInput" name="scan_image" class="file-input-hidden" accept=".jpg,.jpeg,.png" required>
+        
+        <div class="upload-icon-circle">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+
+        <div class="upload-title">Drag & Drop Kidney Scan Here</div>
+        <p class="upload-subtitle">or click anywhere in this container to browse local files</p>
+
+        <div style="display: inline-flex; align-items: center; gap: 0.75rem; font-size: 0.8rem; color: var(--text-dim); background: rgba(255, 255, 255, 0.04); padding: 0.35rem 0.9rem; border-radius: 20px;">
+          <span>Accepted: <strong>JPG, JPEG, PNG</strong></span>
+          <span>&bull;</span>
+          <span>Max Size: <strong>16 MB</strong></span>
+          <span>&bull;</span>
+          <span>Target Resolution: <strong>≥ 128x128 px</strong></span>
+        </div>
+      </div>
+
+      <!-- Live Scan Preview Area -->
+      <div id="previewContainer" class="preview-container">
+        <div class="preview-grid">
+          <img id="previewImage" class="preview-thumb" src="" alt="Kidney Scan Preview">
+          <div>
+            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--cyan-primary);">
+              Selected Medical Scan
+            </h4>
+            
+            <div class="meta-row">
+              <strong>File Name:</strong>
+              <span id="previewFilename" style="color: var(--text-main); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">-</span>
+            </div>
+            <div class="meta-row">
+              <strong>File Size:</strong>
+              <span id="previewFilesize" style="color: var(--text-main);">-</span>
+            </div>
+            <div class="meta-row">
+              <strong>Dimensions:</strong>
+              <span id="previewDimensions" style="color: var(--text-main);">-</span>
+            </div>
+            <div class="meta-row">
+              <strong>Modality:</strong>
+              <span style="color: #6ee7b7; font-weight: 600;">Renal CT / MRI Axial Section</span>
+            </div>
+
+            <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem;">
+              <button type="button" id="removeScanBtn" class="btn btn-danger" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Remove Scan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div style="margin-top: 2rem; text-align: center;">
+        <button type="submit" id="analyzeScanBtn" class="btn btn-primary btn-lg" style="width: 100%; max-width: 360px;" {% if not models_ready %}disabled{% endif %}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Analyze Scan
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Medical Imaging Guidelines Reference -->
+  <div class="glass-card" style="margin-top: 2rem; padding: 1.5rem;">
+    <h4 style="font-size: 0.95rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.75rem;">
+      Diagnostic Scan Preparation Guidelines
+    </h4>
+    <ul style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; padding-left: 1.2rem;">
+      <li>Ensure the scan slice captures the entire renal silhouette with clear cortical boundaries.</li>
+      <li>DICOM images should be exported in non-lossy 8-bit or 24-bit PNG/JPEG formats.</li>
+      <li>Avoid images containing severe motion artifacts or metal clipping that obscures soft tissue contrast.</li>
+      <li>Axial view is the validated imaging plane matching the training dataset distribution.</li>
+    </ul>
+  </div>
+
+  <!-- Mandatory Medical Disclaimer -->
+  <div class="medical-disclaimer">
+    <div class="disclaimer-icon">&#9888;</div>
+    <div class="disclaimer-text">
+      <strong>SCREENING PROTOCOL NOTICE:</strong> This AI system is intended for educational and screening/decision-support purposes only. It does not replace professional medical diagnosis. CT/MRI findings should be reviewed and confirmed by a qualified healthcare professional.
+    </div>
+  </div>
+</div>
+
+<!-- Multi-Stage Animated Processing Modal Overlay -->
+<div id="processingOverlay" class="processing-overlay">
+  <div class="processing-card">
+    <div class="spinner-medical"></div>
+    <h3 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">
+      Analyzing Kidney Image...
+    </h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.75rem;">
+      Dual-engine ML pipeline executing feature extraction and inference
+    </p>
+
+    <div style="background: rgba(7, 13, 30, 0.7); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 1rem 1.5rem; text-align: left;">
+      <div id="stage1" class="stage-step active">
+        <span>&bull;</span> Initializing image tensor & validating dimensions...
+      </div>
+      <div id="stage2" class="stage-step">
+        <span>&bull;</span> Preprocessing image & normalizing pixel values...
+      </div>
+      <div id="stage3" class="stage-step">
+        <span>&bull;</span> Extracting 96-dim radiomic & texture features...
+      </div>
+      <div id="stage4" class="stage-step">
+        <span>&bull;</span> Running Support Vector Machine (RBF Kernel)...
+      </div>
+      <div id="stage5" class="stage-step">
+        <span>&bull;</span> Running Decision Tree Classifier...
+      </div>
+      <div id="stage6" class="stage-step">
+        <span>&bull;</span> Computing ensemble consensus & confidence score...
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

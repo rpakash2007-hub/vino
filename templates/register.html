@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Clinician Registration - NephroScan AI{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="glass-card">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div class="brand-icon" style="margin: 0 auto 1rem; width: 48px; height: 48px;">
+        <svg viewBox="0 0 24 24" style="width: 28px; height: 28px;">
+          <path d="M12 2C8.5 2 6 5.5 6 9c0 4.5 4 8 6 13 2-5 6-8.5 6-13 0-3.5-2.5-7-6-7zm0 10.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 7.5 12 7.5s2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5z"/>
+        </svg>
+      </div>
+      <h2 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem;">Create Account</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Register to access automated kidney CT & MRI diagnostic analysis</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('register') }}">
+      <div class="form-group">
+        <label class="form-label" for="name">Full Name</label>
+        <input type="text" id="name" name="name" class="form-control" placeholder="Dr. Jane Doe" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input type="email" id="email" name="email" class="form-control" placeholder="jane.doe@medical.org" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input type="password" id="password" name="password" class="form-control" placeholder="Minimum 6 characters" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirm_password">Confirm Password</label>
+        <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Re-enter password" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">
+        Complete Registration
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.85rem; color: var(--text-muted);">
+      Already registered? <a href="{{ url_for('login') }}" style="color: var(--cyan-primary); text-decoration: none; font-weight: 600;">Sign in here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

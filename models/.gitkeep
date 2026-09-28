@@ -1,0 +1,7 @@
+# Models directory for NephroScan AI
+# Contains:
+# - svm_model.pkl
+# - decision_tree_model.pkl
+# - scaler.pkl
+# - class_labels.pkl
+# - training_metadata.json

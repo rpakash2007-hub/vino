@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Clinician Sign In - NephroScan AI{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="glass-card">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div class="brand-icon" style="margin: 0 auto 1rem; width: 48px; height: 48px;">
+        <svg viewBox="0 0 24 24" style="width: 28px; height: 28px;">
+          <path d="M12 2C8.5 2 6 5.5 6 9c0 4.5 4 8 6 13 2-5 6-8.5 6-13 0-3.5-2.5-7-6-7zm0 10.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 7.5 12 7.5s2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5z"/>
+        </svg>
+      </div>
+      <h2 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem;">Clinician Sign In</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Access your kidney diagnostic decision workspace</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="form-group">
+        <label class="form-label" for="email">Institutional / Clinical Email</label>
+        <input type="email" id="email" name="email" class="form-control" placeholder="doctor@hospital.org" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <label class="form-label" for="password" style="margin-bottom: 0;">Password</label>
+          <a href="{{ url_for('forgot_password') }}" style="font-size: 0.8rem; color: var(--cyan-primary); text-decoration: none;">Forgot?</a>
+        </div>
+        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+      </div>
+
+      <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+        <input type="checkbox" id="remember" name="remember" style="accent-color: var(--cyan-primary); cursor: pointer;">
+        <label for="remember" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">Keep me authenticated on this device</label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">
+        Sign In to Screening System
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.85rem; color: var(--text-muted);">
+      Don't have an account? <a href="{{ url_for('register') }}" style="color: var(--cyan-primary); text-decoration: none; font-weight: 600;">Register here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}AI Diagnosis Result #{{ diagnosis.id }} - NephroScan AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 980px; margin: 0 auto;">
+
+  <!-- Breadcrumbs & Quick Nav -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div style="font-size: 0.85rem; color: var(--text-muted);">
+      <a href="{{ url_for('dashboard') }}" style="color: var(--cyan-primary); text-decoration: none;">Dashboard</a>
+      <span> / </span>
+      <a href="{{ url_for('history') }}" style="color: var(--cyan-primary); text-decoration: none;">History</a>
+      <span> / </span>
+      <span>Diagnostic Report #{{ diagnosis.id }}</span>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="{{ url_for('upload') }}" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Analyze Another Scan
+      </a>
+      <button onclick="window.print()" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        Print Clinical Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Main AI Diagnosis Result Banner -->
+  <div class="glass-card result-header-card">
+    <div style="font-size: 0.8rem; font-weight: 700; color: var(--cyan-primary); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 0.75rem;">
+      --------------------------------<br>
+      AI DIAGNOSIS RESULT<br>
+      --------------------------------
+    </div>
+
+    <div style="margin-bottom: 0.5rem;">
+      <span class="result-badge 
+        {% if diagnosis.prediction == 'NORMAL' %}badge-normal
+        {% elif diagnosis.prediction == 'STONE' %}badge-stone
+        {% elif diagnosis.prediction == 'CYST' %}badge-cyst
+        {% elif diagnosis.prediction == 'TUMOR' %}badge-tumor
+        {% endif %}">
+        Prediction: {{ display_name }}
+      </span>
+    </div>
+
+    <div class="result-confidence-large">
+      {{ "%.2f"|format(diagnosis.confidence) }}%
+    </div>
+    <div class="result-confidence-caption">
+      Calculated Consensus Confidence Score
+    </div>
+
+    <!-- Low Confidence Warning Flag -->
+    {% if diagnosis.is_low_confidence %}
+      <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: var(--radius-md); padding: 1rem 1.5rem; max-width: 650px; margin: 1.5rem auto 0; text-align: left; display: flex; gap: 0.75rem; align-items: center;">
+        <span style="font-size: 1.5rem; color: var(--warning);">&#9888;</span>
+        <div style="font-size: 0.88rem; color: #fde68a;">
+          <strong>Low-confidence AI result.</strong> Please upload a clearer CT/MRI image and consult a qualified medical professional for histological and contrast evaluation.
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Strict Four Categories Status Cards (Only detected highlighted) -->
+  <div style="margin-bottom: 1rem;">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+      Diagnostic Classification Categories
+    </h3>
+  </div>
+
+  <div class="four-classes-grid">
+    <!-- Category 1: NORMAL -->
+    <div class="class-status-card cls-normal {% if diagnosis.prediction == 'NORMAL' %}active-detected{% endif %}">
+      <div style="font-size: 0.75rem; font-weight: 700; color: #10b981; margin-bottom: 0.25rem;">
+        {% if diagnosis.prediction == 'NORMAL' %}★ DETECTED CLASS{% else %}CATEGORY 1{% endif %}
+      </div>
+      <div class="class-title">NORMAL</div>
+      <div class="class-desc">Unremarkable parenchyma, corticomedullary differentiation intact</div>
+    </div>
+
+    <!-- Category 2: STONE -->
+    <div class="class-status-card cls-stone {% if diagnosis.prediction == 'STONE' %}active-detected{% endif %}">
+      <div style="font-size: 0.75rem; font-weight: 700; color: #f59e0b; margin-bottom: 0.25rem;">
+        {% if diagnosis.prediction == 'STONE' %}★ DETECTED CLASS{% else %}CATEGORY 2{% endif %}
+      </div>
+      <div class="class-title">STONE</div>
+      <div class="class-desc">Calculus attenuation, hyperdense focal nephrolithiasis</div>
+    </div>
+
+    <!-- Category 3: CYST -->
+    <div class="class-status-card cls-cyst {% if diagnosis.prediction == 'CYST' %}active-detected{% endif %}">
+      <div style="font-size: 0.75rem; font-weight: 700; color: #3b82f6; margin-bottom: 0.25rem;">
+        {% if diagnosis.prediction == 'CYST' %}★ DETECTED CLASS{% else %}CATEGORY 3{% endif %}
+      </div>
+      <div class="class-title">CYST</div>
+      <div class="class-desc">Fluid-attenuation lesion, thin imperceptible margins</div>
+    </div>
+
+    <!-- Category 4: TUMOR -->
+    <div class="class-status-card cls-tumor {% if diagnosis.prediction == 'TUMOR' %}active-detected{% endif %}">
+      <div style="font-size: 0.75rem; font-weight: 700; color: #ef4444; margin-bottom: 0.25rem;">
+        {% if diagnosis.prediction == 'TUMOR' %}★ DETECTED CLASS{% else %}CATEGORY 4{% endif %}
+      </div>
+      <div class="class-title">TUMOR</div>
+      <div class="class-desc">Solid renal mass, parenchymal architectural disruption</div>
+    </div>
+  </div>
+
+  <!-- Detailed Dual Model Comparison & Scan Inspection -->
+  <div style="display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    
+    <!-- Uploaded Scan Visual -->
+    <div class="glass-card" style="padding: 1.5rem; text-align: center;">
+      <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">
+        Analyzed Kidney Scan
+      </h4>
+      <div style="background: #000; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 1rem;">
+        <img src="{{ url_for('uploaded_file', filename=diagnosis.filename) }}" alt="Analyzed CT Scan" style="width: 100%; height: 260px; object-fit: contain; display: block;">
+      </div>
+      <div style="text-align: left; font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
+        <div><strong>Filename:</strong> <span style="color: var(--text-main); font-family: 'JetBrains Mono', monospace;">{{ diagnosis.original_filename }}</span></div>
+        <div><strong>Dimensions:</strong> <span style="color: var(--text-main);">{{ diagnosis.image_dimensions }}</span></div>
+        <div><strong>Audited:</strong> <span style="color: var(--text-main);">{{ diagnosis.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</span></div>
+      </div>
+    </div>
+
+    <!-- Dual ML Classifier Metrics -->
+    <div>
+      <div class="dual-model-grid" style="margin-bottom: 1.5rem;">
+        
+        <!-- Classifier 1: SVM -->
+        <div class="model-card">
+          <div class="model-header">
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--cyan-primary);">
+              Support Vector Machine
+            </span>
+            <span style="font-size: 0.75rem; background: rgba(0, 229, 255, 0.1); padding: 0.15rem 0.5rem; border-radius: 12px; color: var(--cyan-primary);">
+              RBF Kernel (C=2.0)
+            </span>
+          </div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
+            Prediction: {{ diagnosis.svm_prediction }}
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Estimated Probability: <strong style="color: var(--cyan-primary);">{{ "%.2f"|format(diagnosis.svm_confidence) }}%</strong>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-dim); line-height: 1.4;">
+            Calculates optimal hyperplane separation in 96-dimensional radiomic feature space using radial basis kernel margins.
+          </p>
+        </div>
+
+        <!-- Classifier 2: Decision Tree -->
+        <div class="model-card">
+          <div class="model-header">
+            <span style="font-size: 0.85rem; font-weight: 700; color: #a855f7;">
+              Decision Tree Classifier
+            </span>
+            <span style="font-size: 0.75rem; background: rgba(168, 85, 247, 0.1); padding: 0.15rem 0.5rem; border-radius: 12px; color: #c084fc;">
+              Tree Depth: 10
+            </span>
+          </div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
+            Prediction: {{ diagnosis.decision_tree_prediction }}
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Estimated Probability: <strong style="color: #c084fc;">{{ "%.2f"|format(diagnosis.decision_tree_confidence) }}%</strong>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-dim); line-height: 1.4;">
+            Applies hierarchical recursive threshold partitions across radiodensity and spatial asymmetry features.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Consensus Decision Status -->
+      <div class="glass-card" style="padding: 1.25rem 1.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+              Ensemble Model Agreement
+            </div>
+            <div style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-top: 0.2rem;">
+              {% if diagnosis.svm_prediction == diagnosis.decision_tree_prediction %}
+                <span style="color: #10b981;">&#10004; Full Consensus Reached</span> (Both models agree on {{ diagnosis.prediction }})
+              {% else %}
+                <span style="color: var(--warning);">&#9888; Model Disagreement Resolved</span> (Ensemble weighted calibrated margin selected {{ diagnosis.prediction }})
+              {% endif %}
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Decision Logic</div>
+            <div style="font-size: 0.85rem; color: var(--cyan-primary); font-weight: 600;">Weighted Soft Voting</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clinical Decision Recommendations -->
+  <div class="glass-card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">
+      Clinical Decision Support Guidance
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
+      <div>
+        <strong style="color: var(--cyan-primary);">Next Clinical Step:</strong>
+        <p>Order definitive contrast-enhanced multiphase CT or MRI protocol if clinical suspicion persists or if non-contrast baseline is equivocal.</p>
+      </div>
+      <div>
+        <strong style="color: var(--cyan-primary);">Radiology Peer Review:</strong>
+        <p>Correlate this machine-assisted classification with formal radiologist interpretation, urinalysis, serum creatinine, and patient symptomatology.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mandatory Medical Disclaimer Notice -->
+  <div class="medical-disclaimer">
+    <div class="disclaimer-icon">&#9888;</div>
+    <div class="disclaimer-text">
+      <strong>MANDATORY REGULATORY DISCLAIMER:</strong> This AI system is intended for educational and screening/decision-support purposes only. It does not replace professional medical diagnosis. CT/MRI findings should be reviewed and confirmed by a qualified healthcare professional.
+    </div>
+  </div>
+
+</div>
+{% endblock %}
